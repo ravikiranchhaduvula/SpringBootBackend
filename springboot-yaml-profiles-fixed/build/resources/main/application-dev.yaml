@@ -1,0 +1,9 @@
+server:
+  port: 8081
+myapp:
+  name: DevApp
+  features:
+    - login
+    - signup
+  logger-type: consoleLogger
+  enable-advanced-logger: true

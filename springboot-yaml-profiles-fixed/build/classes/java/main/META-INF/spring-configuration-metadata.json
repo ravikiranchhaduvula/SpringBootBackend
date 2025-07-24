@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "name": "myapp",
+      "type": "com.example.config.AppConfig",
+      "sourceType": "com.example.config.AppConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "myapp.features",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.example.config.AppConfig"
+    },
+    {
+      "name": "myapp.name",
+      "type": "java.lang.String",
+      "sourceType": "com.example.config.AppConfig"
+    }
+  ],
+  "hints": []
+}
