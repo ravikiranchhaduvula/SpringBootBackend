@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.annotation.TrackRequest;
 import com.example.service.Logger;
 import com.example.service.LoggingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ public class FailController {
         this.logger = logger;
     }
 
+    @TrackRequest
     @GetMapping("/log")
     public String log(@RequestParam String msg) {
         logger.log(msg);

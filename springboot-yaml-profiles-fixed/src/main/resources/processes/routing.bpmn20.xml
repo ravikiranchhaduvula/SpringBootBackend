@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:flowable="http://flowable.org/bpmn"
+                  targetNamespace="http://www.flowable.org/processdef">
+
+    <bpmn:process id="paymentRouting" name="Payment Routing" isExecutable="true">
+
+        <bpmn:startEvent id="startEvent" name="Start" />
+
+        <bpmn:sequenceFlow id="flow1" sourceRef="startEvent" targetRef="routeDecision" />
+
+        <bpmn:serviceTask id="routeDecision" name="Decide Route"
+                          flowable:delegateExpression="${routeDecisionDelegate}" />
+
+        <bpmn:sequenceFlow id="flow2" sourceRef="routeDecision" targetRef="routeGateway" />
+
+        <!-- Exclusive Gateway -->
+        <bpmn:exclusiveGateway id="routeGateway" name="Check selectedRoute" />
+
+        <!-- Route A Path -->
+        <bpmn:sequenceFlow id="toRouteA" sourceRef="routeGateway" targetRef="routeA">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+                <![CDATA[${selectedRoute == 'RouteA'}]]>
+            </bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+
+        <bpmn:serviceTask id="routeA" name="Process via Route A" flowable:delegateExpression="${routeAServiceTask}" />
+        <bpmn:sequenceFlow id="flowAEnd" sourceRef="routeA" targetRef="endEvent" />
+
+        <!-- Route B Path -->
+        <bpmn:sequenceFlow id="toRouteB" sourceRef="routeGateway" targetRef="routeB">
+            <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">
+                <![CDATA[${selectedRoute == 'RouteB'}]]>
+            </bpmn:conditionExpression>
+        </bpmn:sequenceFlow>
+
+        <bpmn:serviceTask id="routeB" name="Process via Route B" flowable:class="com.example.workflow.RouteBServiceTask" />
+        <bpmn:sequenceFlow id="flowBEnd" sourceRef="routeB" targetRef="endEvent" />
+
+        <!-- Default Path -->
+        <bpmn:sequenceFlow id="toDefault" sourceRef="routeGateway" targetRef="defaultRoute" flowable:default="true" />
+        <bpmn:serviceTask id="defaultRoute" name="Fallback Route" flowable:class="com.example.workflow.DefaultRouteServiceTask" />
+        <bpmn:sequenceFlow id="flowDefaultEnd" sourceRef="defaultRoute" targetRef="endEvent" />
+
+        <bpmn:endEvent id="endEvent" name="End" />
+
+    </bpmn:process>
+</bpmn:definitions>

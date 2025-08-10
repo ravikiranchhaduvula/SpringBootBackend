@@ -13,7 +13,14 @@ repositories {
 }
 
 dependencies {
+    implementation("org.postgresql:postgresql")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.flowable:flowable-spring-boot-starter-process:7.0.0")
+    implementation("org.springframework.boot:spring-boot-starter-hateoas")
+    implementation("org.springframework.kafka:spring-kafka")
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
