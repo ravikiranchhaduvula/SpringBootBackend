@@ -3,6 +3,8 @@ package com.example.controller;
 import com.example.entity.User;
 import com.example.repository.UserRepository;
 import com.example.service.HATEOASUserConsumer;
+import lombok.Builder;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,8 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,7 +33,13 @@ public class UserController {
 
     @GetMapping("/{id}")
     public EntityModel<User> getUser(@PathVariable Long id) {
-        User user = new User(id, "Ravi", "ravi@email.com");
+        User user = User.builder()
+                .id(id)
+                .name("Ravi")
+                .email("ravi@email.com")
+                .userRoles(new HashSet<>())
+                .build();
+
 
         return EntityModel.of(user,
                 WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(UserController.class)

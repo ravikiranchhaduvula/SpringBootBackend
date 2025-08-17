@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.ehcache.org/v3"
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107">
+
+    <cache-template name="defaults">
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+    </cache-template>
+
+    <!-- Hibernate regions -->
+    <!-- The alias "com.example.entity.User" matches your entity’s FQN for the entity region. -->
+    <cache alias="com.example.entity.User" uses-template="defaults"/>
+    <cache alias="hibernate.common.internal-cache" uses-template="defaults"/>
+    <cache alias="hibernate.query.results" uses-template="defaults"/>
+    <cache alias="hibernate.timestamps" uses-template="defaults"/>
+
+    <!-- Enable JCache facade -->
+    <jsr107:defaults enable-management="false" enable-statistics="true"/>
+</config>

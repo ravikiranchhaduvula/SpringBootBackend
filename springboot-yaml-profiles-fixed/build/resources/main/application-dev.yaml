@@ -1,17 +1,12 @@
 server:
   port: 8081
-myapp:
-  name: DevApp
-  features:
-    - login
-    - signup
-  logger-type: consoleLogger
-  enable-advanced-logger:
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/mydb
     username: postgres
     password: postgres
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -20,13 +15,34 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: payment-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+        # ✅ enable Hibernate L2 + query cache
+        cache.use_second_level_cache: false
+        cache.use_query_cache: false
+
+        # ✅ tell Hibernate to use JCache (Ehcache) region factory
+        cache.region.factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+
+        # optional: create missing regions automatically
+        javax.cache.missing_cache_strategy: create
+
+  # ✅ Spring’s JCache config location (hands it to Ehcache)
+  cache:
+    jcache:
+      config: classpath:ehcache.xml
+
+kafka:
+  bootstrap-servers: localhost:9092
+  consumer:
+    group-id: payment-group
+    auto-offset-reset: earliest
+    key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+myapp:
+  name: DevApp
+  features: [login, signup]
+  logger-type: consoleLogger
