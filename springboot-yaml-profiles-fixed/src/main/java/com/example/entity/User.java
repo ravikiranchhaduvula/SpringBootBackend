@@ -1,10 +1,7 @@
 package com.example.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.data.annotation.CreatedDate;
@@ -18,8 +15,9 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
+@Getter
+@Setter
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "users")
 @NamedNativeQuery(
@@ -48,10 +46,12 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     private String name;
 
+    @Column(unique = true, nullable = false)
     private String email;
 
     // in User.java
@@ -59,6 +59,12 @@ public class User {
     private boolean deleted = false; // and this default
 
     private Instant deletedAt;
+
+    @Column(nullable = false)
+    private String password;   // <-- BCrypt hash
+
+    @Builder.Default
+    private boolean enabled = true;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)

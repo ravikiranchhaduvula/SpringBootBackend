@@ -6,7 +6,15 @@ spring:
     url: jdbc:postgresql://localhost:5432/mydb
     username: postgres
     password: postgres
-
+  logging:
+    file:
+      name: logs/app.log
+  #security:
+    #user:
+      #name: ravi
+      #password: "{noop}secret"
+      #password: "{bcrypt}$2a$10$gbQ6jVQCCrfLXW5C6Kk33e.kGWrtBP998GB7laPnTfI0PFQD7Xc/y"
+      #roles: ADMIN,USER
   jpa:
     hibernate:
       ddl-auto: update
@@ -46,3 +54,41 @@ myapp:
   name: DevApp
   features: [login, signup]
   logger-type: consoleLogger
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+# application.yml
+app:
+  jwt:
+    secret: "change-this-to-256-bit-random-string-aaaaaaaa-bbbbbbbb-cccccccc-dddddddd" # ~32+ chars
+    expiry: 3600  # seconds
+
+external:
+  user-service:
+    base-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      extUser:                                # name used in @CircuitBreaker/@Retry
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10                 # look at last 10 calls
+        failureRateThreshold: 50              # open if >50% failed
+        slowCallDurationThreshold: 2s         # calls slower than 2s are "slow"
+        slowCallRateThreshold: 50             # open if >50% are slow
+        waitDurationInOpenState: 10s          # stay open for 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+  retry:
+    instances:
+      extUser:
+        maxAttempts: 3                        # 1 original + 2 retries
+        waitDuration: 200ms                   # fixed backoff per retry
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - org.springframework.web.client.ResourceAccessException   # timeouts, I/O
+          - org.springframework.web.client.RestClientException
+          - java.io.IOException
+          - java.net.SocketTimeoutException

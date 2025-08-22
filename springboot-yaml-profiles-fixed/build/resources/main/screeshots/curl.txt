@@ -47,3 +47,113 @@ curl -X PUT "http://localhost:8081/api/mybatis/users/2001" ^
 5️⃣ Delete (DELETE)
 
 curl -X DELETE "http://localhost:8081/api/mybatis/users/2001"
+
+curl -X POST http://localhost:8081/api/users/jdbc -H "Content-Type: application/json" -d '{"name":"Ravi","email":"ravi@email.com"}'
+
+
+docker run -d --name kafka -p 9092:9092 -e KAFKA_ZOOKEEPER_CONNECT=host.docker.internal:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 confluentinc/cp-kafka
+
+
+
+curl.exe -X POST "http://localhost:8081/api/users/jdbc" ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"Ravi\",\"email\":\"ravi@email.com\"}"
+
+
+  curl -X PUT "http://localhost:8081/api/users/jdbc/1 \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Updated Ravi","email":"updated@email.com"}'
+
+
+  # Exact name match (JPQL)
+curl "http://localhost:8081/api/users/query/by-name?name=Ravi"
+
+# LIKE search with pagination (JPQL)
+curl "http://localhost:8081/api/users/query/search?q=ra&page=0&size=5"
+
+# Native SQL example
+curl "http://localhost:8081/api/users/query/native?name=Ravi"
+
+# Entity result via named native query
+curl "http://localhost:8081/api/users/native/by-email?email=ravi@email.com"
+
+# DTO result via named native query + SqlResultSetMapping
+curl "http://localhost:8081/api/users/native/dtos"
+
+
+# Name contains 'ra', email domain gmail.com, sort by name asc, first page of 5
+curl "http://localhost:8081/api/users/native-search?q=ra&domain=gmail.com&sortBy=name&dir=asc&page=0&size=5"
+
+# Only domain filter, sort by id desc
+curl "http://localhost:8081/api/users/native-search?domain=yahoo.com&sortBy=id&dir=desc"
+
+# No filters, defaults (id asc, page 0, size 10)
+curl "http://localhost:8081/api/users/native-search"
+
+# Constructor DTOs (pageable)
+curl "http://localhost:8081/api/users/dto/search?q=ra&page=0&size=5&sort=name,asc"
+
+# Interface projection with role counts (pageable)
+curl "http://localhost:8081/api/users/dto/summaries?q=ra&page=0&size=5"
+
+# Constructor DTOs (pageable)
+curl "http://localhost:8081/api/users/dto/search?q=ra&page=0&size=5&sort=name,asc"
+
+# Interface projection with role counts (pageable)
+curl "http://localhost:8081/api/users/dto/summaries?q=ra&page=0&size=5"
+
+# Name contains 'ra', gmail domain, has ADMIN role, sort by name asc
+curl "http://localhost:8081/api/users/spec?q=ra&domain=gmail.com&role=ADMIN&sort=name,asc"
+
+# Between two timestamps (ISO-8601) and paginated
+curl "http://localhost:8081/api/users/spec?from=2025-08-01T00:00:00Z&to=2025-08-31T23:59:59Z&page=0&size=10"
+
+# Without credentials -> 401 Unauthorized
+curl -i http://localhost:8081/api/hello
+
+# With credentials -> 200 OK, "Hello, ravi!"
+curl -i -u ravi:secret http://localhost:8081/api/hello
+
+# Public endpoint -> 200 OK, "pong"
+curl -i http://localhost:8081/api/public/ping
+
+# Public
+curl -i http://localhost:8081/api/public/ping
+
+# Authenticated (USER or ADMIN) – protected by .anyRequest().authenticated()
+curl -i -u ravi:secret http://localhost:8081/api/hello
+
+# Admin-only URL rule
+curl -i -u ravi:secret http://localhost:8081/api/admin/stats
+# 200 OK if ravi has ADMIN; 403 if not
+
+##### CustomInmemoryUserDetailsManager
+# public
+curl -i http://localhost:8081/api/public/ping
+
+# requires auth
+curl -i -u ravi:secret http://localhost:8081/api/hello
+
+# admin only
+curl -i -u ravi:secret http://localhost:8081/api/admin/stats   # 200 (ADMIN)
+curl -i -u alex:secret http://localhost:8081/api/admin/stats   # 403 (only USER)
+
+# auth-only
+curl -i -u admin@example.com:secret http://localhost:8081/api/me
+# expect 200
+
+# admin-only
+curl -i -u admin@example.com:secret http://localhost:8081/api/admin/stats
+# expect 200 (if role row exists)
+
+# 1) Get a token
+curl -i -X POST http://localhost:8081/api/auth/login ^
+  -H "Content-Type: application/json" ^
+  -d "{\"username\":\"admin@example.com\",\"password\":\"secret\"}"
+
+# -> {"accessToken":"eyJhbGciOiJIUzI1NiIs...","tokenType":"Bearer"}
+
+# 2) Call a protected endpoint
+TOKEN=eyJhbGciOiJIUzI1NiIs...          # paste from above
+curl -i http://localhost:8081/api/admin/stats ^
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzU1NzY4OTM0LCJleHAiOjE3NTU3NzI1MzR9.0a7xSU9kWr6HnZHslAy4bC6OlYk1BA5bcrTdZO4D3iA"

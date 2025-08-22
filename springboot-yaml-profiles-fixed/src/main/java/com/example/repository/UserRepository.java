@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 //JpaSpecificationExecutor adds findAll(Specification, Pageable), count(Specification) etc.
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
@@ -38,4 +39,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     // Use EntityGraph to eagerly load roles (kills N+1) while keeping the query simple.
     @EntityGraph(attributePaths = "userRoles")
     List<User> findAll(Specification<User> spec);
+
+    Optional<User> findByEmail(String email);   // we’ll login with email
+
+    @EntityGraph(attributePaths = "userRoles")
+    Optional<User> findWithRolesByEmail(String email);
 }

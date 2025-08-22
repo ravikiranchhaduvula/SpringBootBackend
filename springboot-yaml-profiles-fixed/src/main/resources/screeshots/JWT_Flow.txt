@@ -1,0 +1,29 @@
+==================================================================================
+[Login]            Controller → AuthenticationManager → DaoAuthenticationProvider
+ (user+pass)       (delegates)   (UserDetailsService + PasswordEncoder)
+                           ↓ success
+                     JwtService.generate() → return token to client
+
+[Every request]     JwtAuthenticationFilter:
+ (Bearer token)     - parse & verify token
+                    - load UserDetails
+                    - set SecurityContext Authentication
+                    → proceed to controller/authorization
+
+
+==================================================================================
+
+   +---------+            +------------------+           +--------------------+
+   |  Client | -- login → |  AuthController  | --valid→  | Generate JWT Token |
+   +---------+            +------------------+           +--------------------+
+        |                         |
+        |  ←--- token (JWT) ------+
+        |
+        | -- Authorization: Bearer <JWT> ---→
+        |
+   +---------+            +------------------+           +-------------------+
+   |  Client | → request  | JwtAuthFilter    | --valid→  | Spring Security   |
+   +---------+            +------------------+           +-------------------+
+        |                                                        |
+        | ←--- protected data ------------------------------------+
+==================================================================================

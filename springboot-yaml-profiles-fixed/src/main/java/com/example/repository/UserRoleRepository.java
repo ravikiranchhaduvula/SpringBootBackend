@@ -5,4 +5,6 @@ import com.example.entity.UserRoleId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRoleRepository extends JpaRepository<UserRole, UserRoleId> {
+    boolean existsByUser_IdAndRoleName(Long userId, String roleName); // <-- note: _Id
 }
+
