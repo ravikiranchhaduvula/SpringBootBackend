@@ -42,6 +42,8 @@ dependencies {
     implementation("io.zipkin.reporter2:zipkin-reporter-brave") // optional: send to Zipkin/Tempo/Jaeger via Zipkin endpoint
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
     implementation("jakarta.validation:jakarta.validation-api")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+    // if you use WebFlux: springdoc-openapi-starter-webflux-ui:2.5.0
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 // JSON serializer

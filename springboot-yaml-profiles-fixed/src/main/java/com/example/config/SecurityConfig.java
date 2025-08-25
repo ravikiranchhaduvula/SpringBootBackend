@@ -1,6 +1,8 @@
 package com.example.config;
 
 import com.example.security.jwt.JwtAuthenticationFilter;
+import com.example.security.jwt.RestAccessDeniedHandler;
+import com.example.security.jwt.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -85,8 +87,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/public/**", "/api/trace/whoami", "/api/v1/users").permitAll()
                         .requestMatchers("/mock/external/**").permitAll()   // <— allow mock service
                         .requestMatchers("/api/http-demo/**", "/api/users/**").permitAll()   // <— add demo endpoints
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
+                                "/swagger-ui/**").permitAll()
+                        // --- your public endpoints (if any) ---
+                        .requestMatchers("/health", "/actuator/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                ).exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new RestAuthenticationEntryPoint())
+                        .accessDeniedHandler(new RestAccessDeniedHandler())
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults());
