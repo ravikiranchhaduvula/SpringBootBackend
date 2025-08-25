@@ -72,7 +72,7 @@ external:
 resilience4j:
   circuitbreaker:
     instances:
-      extUser:                                # name used in @CircuitBreaker/@Retry
+      extUserSync:                                # name used in @CircuitBreaker/@Retry
         slidingWindowType: COUNT_BASED
         slidingWindowSize: 10                 # look at last 10 calls
         failureRateThreshold: 50              # open if >50% failed
@@ -81,9 +81,20 @@ resilience4j:
         waitDurationInOpenState: 10s          # stay open for 10s
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
+      extUserAsync:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+  ratelimiter:
+    instances:
+      extUserRl:
+        limitForPeriod: 5          # allow 5 calls...
+        limitRefreshPeriod: 1s     # ...per 1 second window
+        timeoutDuration: 200ms     # how long to wait for a permit (0 = fail fast)
   retry:
     instances:
-      extUser:
+      extUserSync:
         maxAttempts: 3                        # 1 original + 2 retries
         waitDuration: 200ms                   # fixed backoff per retry
         retryExceptions:
@@ -92,3 +103,54 @@ resilience4j:
           - org.springframework.web.client.RestClientException
           - java.io.IOException
           - java.net.SocketTimeoutException
+      extUserAsync:
+        maxAttempts: 3
+        waitDuration: 200ms
+
+  bulkhead:
+    instances:
+      # synchronous semaphore bulkhead (fast, no extra threads)
+      extUserSync:
+        maxConcurrentCalls: 5
+        maxWaitDuration: 0    # don't queue; fail fast if full
+
+  thread-pool-bulkhead:
+    instances:
+      # for async + timelimiter (uses its own thread pool)
+      extUserAsync:
+        maxThreadPoolSize: 10
+        coreThreadPoolSize: 5
+        queueCapacity: 20
+
+  timelimiter:
+    instances:
+      # used with async/CompletableFuture methods
+      extUserAsync:
+        timeoutDuration: 1s
+        cancelRunningFuture: true
+
+  management:
+    tracing:
+      sampling:
+        probability: 1.0          # 20% of requests sampled (adjust to taste)
+      propagation:
+        type: b3                    # b3 or b3_single; choose one
+      baggage:
+        # Which custom fields are allowed to propagate over the wire
+        remote-fields: tenantId, requestId
+        # Which baggage fields go into logs (MDC) locally
+        correlation:
+          enabled: true
+          fields: tenantId, requestId
+
+    # optional: if you want to export to Zipkin
+    zipkin:
+      tracing:
+        endpoint: http://localhost:9411/api/v2/spans
+
+  logging:
+    pattern:
+      # Include trace/span/baggage in logs
+      level: "%5p"
+      console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg %n"
+    # For Logback MDC, define your pattern in logback-spring.xml (next section)

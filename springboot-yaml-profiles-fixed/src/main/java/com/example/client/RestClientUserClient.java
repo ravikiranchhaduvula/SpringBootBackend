@@ -19,22 +19,25 @@ public class RestClientUserClient {
                 .body(UserDTO.class);
     }*/
 
-    @io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker(name = "extUser", fallbackMethod = "fallback")
-    @io.github.resilience4j.retry.annotation.Retry(name = "extUser")
-    public UserDTO getUser(long id, boolean fail) {
+    @io.github.resilience4j.retry.annotation.Retry(name = "extUserSync")
+    @io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker(name = "extUserSync", fallbackMethod = "fallback")
+    @io.github.resilience4j.bulkhead.annotation.Bulkhead(name = "extUserSync", type = io.github.resilience4j.bulkhead.annotation.Bulkhead.Type.SEMAPHORE)
+    public UserDTO getUser(long id, boolean fail, Integer delayMs) {
         return rc.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/mock/external/users/{id}")
                         .queryParam("fail", fail)
+                        .queryParam("delayMs", delayMs)
                         .build(id))
                 .retrieve()
                 .body(UserDTO.class);
     }
 
-    // Fallback MUST match signature + Throwable at the end
-    public UserDTO fallback(long id, boolean fail, Throwable t) {
+    // MUST match: same return type, same params in same order + trailing Throwable
+    private UserDTO fallback(long id, boolean fail, Integer delayMs, Throwable t) {
+        // (optional) log t
         log.warn("Fallback for id={}, fail={}, cause={} : {}", id, fail, t.getClass().getSimpleName(), t.getMessage());
-        return new UserDTO(id, "fallback-user", "fallback@example.com");
+        return new UserDTO(id, "fallback-user", "fallback@example.com", false);
     }
 }
 

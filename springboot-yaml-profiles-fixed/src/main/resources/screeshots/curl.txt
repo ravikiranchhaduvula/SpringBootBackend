@@ -157,3 +157,84 @@ curl -i -X POST http://localhost:8081/api/auth/login ^
 TOKEN=eyJhbGciOiJIUzI1NiIs...          # paste from above
 curl -i http://localhost:8081/api/admin/stats ^
   -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInJvbGVzIjpbIlJPTEVfQURNSU4iXSwiaWF0IjoxNzU1NzY4OTM0LCJleHAiOjE3NTU3NzI1MzR9.0a7xSU9kWr6HnZHslAy4bC6OlYk1BA5bcrTdZO4D3iA"
+
+6) Windows CMD tests
+A) Bulkhead (sync) + Retry/CB
+:: success
+curl -i "http://localhost:8081/api/http-demo/rc/1"
+
+:: transient failure (503) → retried up to 3 times; if still failing, fallback
+curl -i "http://localhost:8081/api/http-demo/rc/1?fail=true"
+
+B) TimeLimiter (fail if slow > 1s)
+:: 1500ms delays should trip the 1s timelimiter and hit fallback
+curl -i "http://localhost:8081/api/http-demo/rc-async/2?delayMs=1500"
+
+C) Feign + ErrorDecoder (retry 429/503/504)
+:: Feign path success
+curl -i "http://localhost:8081/api/http-demo/feign/3"
+
+:: Force 503 (will retry via Retryer + ErrorDecoder; if still failing, your wrapper's CB fallback kicks in)
+curl -i "http://localhost:8081/api/http-demo/feign/3?fail=true"
+
+===============================Rate Limit ========================================================
+A) Normal calls (under the limit)
+curl -i "http://localhost:8081/api/http-demo/feign/1"
+
+B) Hit the rate limit (burst more than 5 calls in 1s)
+for /l %i in (1,1,10) do curl -s "http://localhost:8081/api/http-demo/feign/2" && echo.
+
+
+First ~5 should be real responses.
+
+Remaining should trigger rateLimitedFallback (you’ll see rate-limited user).
+
+C) Combine with upstream failures
+:: Will be rate-limited first; if permit OK, server returns 503 -> Retry/CB fallback
+for /l %i in (1,1,10) do curl -s "http://localhost:8081/api/http-demo/feign/3?fail=true" && echo.
+
+
+==================================================================================================
+:: Reactive
+curl -i "http://localhost:8081/api/http-demo/wc/1"
+
+:: Blocking
+curl -i "http://localhost:8081/api/http-demo/wc-blocking/2"
+
+:: Force failure from mock (should retry then fail with 5xx)
+curl -i "http://localhost:8081/api/http-demo/wc/3?fail=true"
+
+:: Simulate slowness to trigger timeout
+curl -i "http://localhost:8081/api/http-demo/wc/4?delayMs=3000"
+
+==================================================================================================
+
+6.1 Not found (your service throws ResourceNotFoundException)
+curl -i http://localhost:8081/api/users/999999
+
+6.2 Validation error
+curl -i -X POST http://localhost:8081/api/users ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"\",\"email\":\"not-an-email\"}"
+
+6.3 Access denied
+curl -i http://localhost:8081/api/admin/stats
+
+=================================================================================================
+5.1 Validation error (missing/invalid fields)
+curl -i -X POST http://localhost:8081/api/v1/users ^
+  -H "Content-Type: application/json" ^
+  -d "{""name"":"""",""email"":""not-an-email"",""password"":""123""}"
+
+5.2 Business rule error (email already exists)
+curl -i -X POST http://localhost:8081/api/v1/users ^
+  -H "Content-Type: application/json" ^
+  -d "{""name"":""Admin"",""email"":""admin@example.com"",""password"":""secret123""}"
+
+5.3 Not found
+curl -i http://localhost:8081/api/users/999999
+
+5.4 Happy path create
+curl -i -X POST http://localhost:8081/api/v1/users ^
+  -H "Content-Type: application/json" ^
+  -d "{""name"":""Ravi"",""email"":""ravi.new@example.com"",""password"":""secret123""}"

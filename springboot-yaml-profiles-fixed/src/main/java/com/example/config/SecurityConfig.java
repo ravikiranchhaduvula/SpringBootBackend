@@ -82,9 +82,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(provider)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/public/**", "/api/trace/whoami", "/api/v1/users").permitAll()
                         .requestMatchers("/mock/external/**").permitAll()   // <— allow mock service
-                        .requestMatchers("/api/http-demo/**").permitAll()   // <— add demo endpoints
+                        .requestMatchers("/api/http-demo/**", "/api/users/**").permitAll()   // <— add demo endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -25,6 +25,6 @@ public class MockExternalController {
             );
         }
 
-        return new UserDTO(id, "MockUser-" + id, "mock"+id+"@example.com");
+        return new UserDTO(id, "MockUser-" + id, "mock"+id+"@example.com", false);
     }
 }

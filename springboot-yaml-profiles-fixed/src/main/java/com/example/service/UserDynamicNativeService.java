@@ -68,7 +68,8 @@ public class UserDynamicNativeService {
             result.add(new UserDTO(
                     ((Number) r[0]).longValue(),
                     (String) r[1],
-                    (String) r[2]
+                    (String) r[2],
+                    false
             ));
         }
         return result;
